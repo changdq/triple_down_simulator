@@ -29,10 +29,12 @@ except FileNotFoundError:
 
 
 # 绘制游戏板
-def draw_board(game_board, screen):
+def draw_board(game_board, screen, animating_block=None):
     screen.fill(LIGHT_GRAY)
     for row in range(ROWS):
         for col in range(COLS):
+            if animating_block and (row, col) == animating_block:
+                continue
             block = game_board.board[row][col]
             if block:
                 x1 = col * BLOCK_SIZE + PADDING
@@ -51,31 +53,33 @@ def draw_board(game_board, screen):
     screen.blit(steps_text, (PADDING, HEIGHT + PADDING + 10))
 
 
-# 消除动画
-def elimination_animation(matches, game_board, screen):
+# 方块缩小动画
+def shrink_block_animation(row, col, game_board, screen):
     shrink_factor = 1.0
     while shrink_factor > 0:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-        screen.fill(LIGHT_GRAY)    
-        draw_board(game_board, screen)
-        for row, col in matches:
-            block = game_board.board[row][col]
-            if block:
-                x1 = col * BLOCK_SIZE + PADDING
-                y1 = row * BLOCK_SIZE + PADDING
-                new_size = int(BLOCK_SIZE * shrink_factor)
-                offset = (BLOCK_SIZE - new_size) // 2
-                color = COLORS[block.block_type - 1] if block.block_type - 1 < len(COLORS) else (128, 128, 128)
-                pygame.draw.rect(screen, color, (x1 + offset, y1 + offset, new_size, new_size))
-                pygame.draw.rect(screen, BLACK, (x1 + offset, y1 + offset, new_size, new_size), 2)
-                text = font.render(str(block.block_type), True, BLACK)
-                text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
-                screen.blit(text, text_rect)
+        # 清除屏幕
+        # screen.fill(LIGHT_GRAY)
+        draw_board(game_board, screen, animating_block=(row, col))
+        block = game_board.board[row][col]
+        if block:
+            x1 = col * BLOCK_SIZE + PADDING
+            y1 = row * BLOCK_SIZE + PADDING
+            new_size = int(BLOCK_SIZE * shrink_factor)
+            offset = (BLOCK_SIZE - new_size) // 2
+            color = COLORS[block.block_type - 1] if block.block_type - 1 < len(COLORS) else (128, 128, 128)
+            pygame.draw.rect(screen, color, (x1 + offset, y1 + offset, new_size, new_size))
+            pygame.draw.rect(screen, BLACK, (x1 + offset, y1 + offset, new_size, new_size), 2)
+            text = font.render(str(block.block_type), True, BLACK)
+            text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
+            screen.blit(text, text_rect)
         pygame.display.flip()
         pygame.time.delay(50)
         shrink_factor -= 0.1
+    # 移除方块
+    game_board.board[row][col] = None
     return True
 
 
@@ -92,7 +96,6 @@ if __name__ == "__main__":
 
     # 主循环
     running = True
-    selected_block = None
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -102,20 +105,9 @@ if __name__ == "__main__":
                 if PADDING <= x < WIDTH + PADDING and PADDING <= y < HEIGHT + PADDING:
                     col = (x - PADDING) // BLOCK_SIZE
                     row = (y - PADDING) // BLOCK_SIZE
-                    if selected_block is None:
-                        selected_block = (row, col)
-                    else:
-                        x1, y1 = selected_block
-                        x2, y2 = row, col
-                        if (abs(x1 - x2) + abs(y1 - y2)) == 1:
-                            game_board.swap_blocks(x1, y1, x2, y2)
-                            matches = game_board.find_matches()
-                            if matches:
-                                if not elimination_animation(matches, game_board, screen):
-                                    running = False
-                                game_board.remove_matches(game_board.group_matches(matches))
-                                game_board.fill_empty_spaces()
-                        selected_block = None
+                    if game_board.board[row][col]:
+                        if not shrink_block_animation(row, col, game_board, screen):
+                            running = False
 
         draw_board(game_board, screen)
         pygame.display.flip()

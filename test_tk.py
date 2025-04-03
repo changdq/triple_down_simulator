@@ -1,5 +1,7 @@
 import tkinter as tk
 
+# 最终怀疑是我的MacOs对tcl/tk的渲染有问题，放弃用这个库做界面
+
 root = tk.Tk()
 root.title("背景色测试")
 root.geometry("400x300")
