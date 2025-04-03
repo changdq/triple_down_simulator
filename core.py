@@ -75,6 +75,11 @@ class GameBoard:
             print()
         print('-----')        
 
+    # For ui, 交换只是交换，以插入动画过程
+    def swap_blocks_ui(self, x1, y1, x2, y2):
+        if (abs(x1 - x2) + abs(y1 - y2)) == 1:
+            self.board[x1][y1], self.board[x2][y2] = self.board[x2][y2], self.board[x1][y1]
+
     def swap_blocks(self, x1, y1, x2, y2):
         # if self.remaining_steps <= 0:
         #     print("步数已用完，游戏结束！")
@@ -173,6 +178,38 @@ class GameBoard:
             if 0 <= neighbor[0] < self.rows and 0 <= neighbor[1] < self.cols:
                 self._dfs(neighbor, block_type, matches, visited, group)
 
+    # 得到生成新方块的位置和type，和下面的remove_matches类似
+    def get_new_block_pos(self, matches, swap_pos=None):
+        res = []
+        groups = self.group_matches(matches)
+        for group in groups:
+            assert len(group) > 0
+            original_type = self.board[group[0][0]][group[0][1]].block_type
+
+            # 移除当前组内的匹配方块
+            for row, col in group:
+                self.board[row][col] = None
+
+            # 确定生成新方块的位置
+            if swap_pos and swap_pos in group:
+                x, y = swap_pos
+            else:
+                # 计算当前组的中心位置
+                sum_x = sum([row for row, _ in group])
+                sum_y = sum([col for _, col in group])
+                x = sum_x // len(group)
+                y = sum_y // len(group)
+
+            # 生成高 1 等级的方块，虽然不会发生，但暂时取max保护下
+            new_block_type = min(original_type + 1, self.max_block_level)
+
+            self.board[x][y] = Block(new_block_type)
+
+            res.append((x,y,new_block_type))
+        
+        return res
+
+
     # remove_matches 按照groups移除，并在每个group的中心位置生成一个高1等级的方块
     def remove_matches(self, groups, swap_pos=None):
         for group in groups:
@@ -200,6 +237,29 @@ class GameBoard:
             new_block_type = min(original_type + 1, self.max_block_level)
             self.board[x][y] = Block(new_block_type)
 
+    # For ui，需要增加一个获取fill_info的函数，获取fill动画所必须的信息：
+    def fill_empty_spaces_ui(self):
+        fall_info = []
+        for col in range(self.cols):
+            empty_spaces = []
+            for row in range(self.rows - 1, -1, -1):
+                if self.board[row][col] is None: 
+                    empty_spaces.append(row)
+                else:
+                    if empty_spaces:
+                        new_row = empty_spaces.pop(0)
+                        fall_info.append((row, col, new_row, col))
+                        self.board[new_row][col] = self.board[row][col]
+                        self.board[row][col] = None
+                        empty_spaces.append(row)
+            # 填充顶部的空缺
+            new_blocks = []
+            for empty_row in empty_spaces:
+                # 按照type_probs 填充
+                block_type = random.choices(range(1, len(self.type_probs) + 1), weights=self.type_probs)[0]
+                new_blocks.append((empty_row, col, block_type))
+                self.board[empty_row][col] = Block(block_type)
+        return fall_info, new_blocks
 
     
     def fill_empty_spaces(self):

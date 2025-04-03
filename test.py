@@ -54,7 +54,7 @@ def draw_board(game_board, screen, animating_block=None):
 
 
 # 方块缩小动画
-def shrink_block_animation(row, col, game_board, screen):
+def shrink_block_animation(row, col, game_board, scrfaeen):
     shrink_factor = 1.0
     while shrink_factor > 0:
         for event in pygame.event.get():
@@ -72,9 +72,14 @@ def shrink_block_animation(row, col, game_board, screen):
             color = COLORS[block.block_type - 1] if block.block_type - 1 < len(COLORS) else (128, 128, 128)
             pygame.draw.rect(screen, color, (x1 + offset, y1 + offset, new_size, new_size))
             pygame.draw.rect(screen, BLACK, (x1 + offset, y1 + offset, new_size, new_size), 2)
-            text = font.render(str(block.block_type), True, BLACK)
+
+            # 根据缩小比例调整字体大小
+            new_font_size = int(36 * shrink_factor)
+            new_font = pygame.font.Font(pygame.font.get_default_font(), new_font_size)
+            text = new_font.render(str(block.block_type), True, BLACK)
             text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
             screen.blit(text, text_rect)
+
         pygame.display.flip()
         pygame.time.delay(50)
         shrink_factor -= 0.1
