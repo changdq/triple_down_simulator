@@ -12,7 +12,7 @@ COLS = 8
 BLOCK_SIZE = 50
 WIDTH = COLS * BLOCK_SIZE
 HEIGHT = ROWS * BLOCK_SIZE
-PADDING = 0
+PADDING = 5
 WINDOW_WIDTH = WIDTH + 2 * PADDING
 WINDOW_HEIGHT = HEIGHT + 2 * PADDING + 50  # 增加高度用于显示步数
 WHITE = (255, 255, 255)
@@ -20,7 +20,7 @@ BLACK = (0, 0, 0)
 LIGHT_GRAY = (200, 200, 200)
 SELECTED_COLOR = (255, 255, 0)  # 选中方块的颜色
 
-# 定义方块颜色，使用更柔和的色调
+# 定义方块颜色，使用更柔和的色调f
 COLORS = [(255, 102, 102), (102, 255, 102), (102, 102, 255), (255, 255, 102), (255, 178, 102)]
 
 # 加载支持中文的字体，这里以系统自带的宋体为例，不同系统字体路径可能不同
@@ -260,6 +260,8 @@ if __name__ == "__main__":
     draw_board(game_board, screen)
     pygame.display.flip()
 
+    move_type = input("请选择移动方式 (1: 玩家输入, 2: AI 移动): ")
+
     # 主循环
     running = True
     selected_block = None
@@ -267,7 +269,11 @@ if __name__ == "__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+
+
+        if move_type == '1':
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 if PADDING <= x < WIDTH + PADDING and PADDING <= y < HEIGHT + PADDING:
                     col = (x - PADDING) // BLOCK_SIZE
@@ -297,6 +303,8 @@ if __name__ == "__main__":
                                 if not is_subsequent_eliminate:
                                     new_blocks = game_board.get_new_block_pos(matches,swap_pos=[(x1,y1),(x2,y2)])
                                 else:
+                                    # Todo: 需要连续判断是否有matches:
+                                    #while game_board.find_matches() is not None:
                                     new_blocks = game_board.get_new_block_pos(matches)
                         
                                 # 生成新方块动画
@@ -312,10 +320,53 @@ if __name__ == "__main__":
                             is_subsequent_eliminate = False    
 
                         selected_block = None
-                    
-                    # 处理鼠标选中
-                    draw_board(game_board, screen,selected_block=selected_block)
-                    pygame.display.flip()                        
+
+        elif move_type == '2': 
+            if not game_board.is_game_over():
+                best_move = game_board.ai_move()
+                if best_move:
+                    x1, y1, x2, y2 = best_move
+                    if not swap_animation(game_board, screen, x1, y1, x2, y2):
+                        running = False
+                    matches = game_board.find_matches()
+
+                    is_subsequent_eliminate = False
+
+                    while matches:
+                        if not elimination_animation(matches, game_board, screen):
+                            running = False
+
+                        if not is_subsequent_eliminate:
+                            new_blocks = game_board.get_new_block_pos(matches,swap_pos=[(x1,y1),(x2,y2)])
+                        else:
+                            new_blocks = game_board.get_new_block_pos(matches)
+                        
+                        # 生成新方块动画
+                        generate_block_animation(matches, new_blocks, game_board, screen)
+
+                        is_subsequent_eliminate = True
+                        subsequent_matches = game_board.find_matches()
+                        # 掉落新方块之前就需要判断是否还有连续匹配：
+                        while subsequent_matches:
+                            elimination_animation(subsequent_matches, game_board, screen) 
+                            new_blocks = game_board.get_new_block_pos(subsequent_matches)
+                            generate_block_animation(subsequent_matches, new_blocks, game_board, screen)
+
+                        # 填充，先不循环填充测试一下
+                        fill_empty_spaces_animation(game_board, screen)           
+                        matches = game_board.find_matches()
+                        
+
+                    is_subsequent_eliminate = False 
+
+        else:
+            print("无效的选择，请输入 1 或 2。")
+            break
+
+
+        # 处理鼠标选中
+        draw_board(game_board, screen,selected_block=selected_block)
+        pygame.display.flip()                        
 
 
     pygame.quit()

@@ -134,6 +134,7 @@ class GameBoard:
         
 
     # 最高等级的方块不会匹配
+    # 需要兼容value是None的情况
     def find_matches(self):
         matches = []
         # 检查水平匹配
@@ -180,6 +181,8 @@ class GameBoard:
 
     # 得到生成新方块的位置和type，和下面的remove_matches类似
     # 需要注意swap_pos是两个，原位置和新位置都需要保留
+    # 
+
     def get_new_block_pos(self, matches, swap_pos=None):
         res = []
         groups = self.group_matches(matches)
@@ -328,6 +331,7 @@ class GameBoard:
         print("棋盘已重新打散。")
 
     # 贪心AI
+    # 暂时先只兼容ui版本，后续还需要改
     def ai_move(self):
         best_move = None
         best_match_length = 0
@@ -378,8 +382,9 @@ class GameBoard:
                     self.board[row][col], self.board[row + 1][col] = self.board[row + 1][col], self.board[row][col]
 
         if best_move:
-            x1, y1, x2, y2 = best_move
-            self.swap_blocks(x1, y1, x2, y2)
+            return best_move
+            #x1, y1, x2, y2 = best_move
+            #self.swap_blocks(x1, y1, x2, y2)
         else:
             print("AI 未找到合适的移动，步数不消耗。")
 
