@@ -1,6 +1,7 @@
 import pygame
 import random
 from core import GameBoard
+import time 
 
 # 初始化 Pygame
 pygame.init()
@@ -11,7 +12,7 @@ COLS = 8
 BLOCK_SIZE = 50
 WIDTH = COLS * BLOCK_SIZE
 HEIGHT = ROWS * BLOCK_SIZE
-PADDING = 5
+PADDING = 0
 WINDOW_WIDTH = WIDTH + 2 * PADDING
 WINDOW_HEIGHT = HEIGHT + 2 * PADDING + 50  # 增加高度用于显示步数
 WHITE = (255, 255, 255)
@@ -35,8 +36,13 @@ def draw_board(game_board, screen, selected_block=None, moving_blocks = None):
     for row in range(ROWS):
         for col in range(COLS):
             block = game_board.board[row][col]
-            if moving_blocks is not None and (row,col) in moving_blocks:
+            if (moving_blocks is not None) and ((row,col) in moving_blocks):
+                #print((row,col))
+                x1 = col * BLOCK_SIZE + PADDING
+                y1 = row * BLOCK_SIZE + PADDING
+                pygame.draw.rect(screen, BLACK, (x1, y1, BLOCK_SIZE, BLOCK_SIZE))
                 continue
+                
 
             if block:
                 x1 = col * BLOCK_SIZE + PADDING
@@ -58,6 +64,7 @@ def draw_board(game_board, screen, selected_block=None, moving_blocks = None):
     # 显示剩余步数
     steps_text = font.render(f"剩余步数: {game_board.remaining_steps}", True, BLACK)
     screen.blit(steps_text, (PADDING, HEIGHT + PADDING + 10))
+    pygame.display.flip()
 
 
 # 交换两个相邻方块的动画效果
@@ -65,7 +72,8 @@ def swap_animation(game_board, screen, x1, y1, x2, y2):
     frames = 10
     dx = (x2 - x1) * BLOCK_SIZE / frames
     dy = (y2 - y1) * BLOCK_SIZE / frames
-    for i in range(frames):
+    for j in range(frames):
+        i = j+1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -104,7 +112,7 @@ def elimination_animation(matches, game_board, screen):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
-        # screen.fill(LIGHT_GRAY)
+        screen.fill(LIGHT_GRAY)
         draw_board(game_board, screen, moving_blocks=matches)
         for row, col in matches:
             block = game_board.board[row][col]
@@ -158,6 +166,10 @@ def generate_block_animation(matches, new_blocks, game_board, screen):
 def fill_empty_spaces_animation(game_board, screen):
     # 获取掉落和生成信息
     falling_blocks, new_blocks = game_board.fill_empty_spaces_ui()    
+
+    print(falling_blocks)
+    print(new_blocks)
+
     # 把信息做成动画，应该是匀速下落，到了指定位置的方块就不再下落。
     # new_blocks可以假设初始位置是在棋盘外面的某个位置开始下落的。
     speed = 5 # 下落速度, 5帧下降一个block的size
@@ -169,35 +181,42 @@ def fill_empty_spaces_animation(game_board, screen):
     for start_row, start_col, end_row, end_col in falling_blocks:
         max_gap = max(max_gap,end_row-start_row)
         # 先低效实现
-        for i in range(start_col,end_row+1):
+        for i in range(start_row,end_row+1):
             if (i,start_col) not in moving_blocks:
                 moving_blocks.append((i,start_col))
 
     for row, col, block_type in new_blocks:
-        max_gap = max(max_gap,row)
+        max_gap = max(max_gap,row+1)
         # 处理新方块掉落位置时用
-        max_new_gap = max(max_new_gap,row)
+        max_new_gap = max(max_new_gap,row+1)
         for i in range(row+1):
             if (i,col) not in moving_blocks:
                 moving_blocks.append((i,col))
 
-    frames = speed * max_gap
+
+    frames = speed * max_gap +1
     new_block_frames = speed * max_new_gap
 
-
+    print(moving_blocks)
+    game_board.display_board()
+    
+    #time.sleep(60)
     for i in range(frames):
-            # 绘制下落的方块
+        # 绘制下落的方块
+        #screen.fill(LIGHT_GRAY)
+        draw_board(game_board, screen, moving_blocks=moving_blocks)      
 
-        draw_board(game_board, screen, moving_blocks=moving_blocks)        
+        #time.sleep(60)  
 
         if falling_blocks:
             for start_row, start_col, end_row, end_col in falling_blocks:
                 block = game_board.board[end_row][end_col]
-                y_offset = (end_row - start_row) * BLOCK_SIZE * i * (BLOCK_SIZE / speed)
+                #y_offset = (end_row - start_row) * BLOCK_SIZE * i * (BLOCK_SIZE / speed)
+                y_offset = i * (BLOCK_SIZE / speed)
                 x1 = start_col * BLOCK_SIZE + PADDING
                 y1 = start_row * BLOCK_SIZE + PADDING + y_offset
                 # 到目标位置就停住
-                y1 = min(y1, start_row * BLOCK_SIZE + PADDING)
+                y1 = min(y1, end_row * BLOCK_SIZE + PADDING)
 
                 color = COLORS[block.block_type - 1] if block.block_type - 1 < len(COLORS) else (128, 128, 128)
                 pygame.draw.rect(screen, color, (x1, y1, BLOCK_SIZE, BLOCK_SIZE))
@@ -223,22 +242,6 @@ def fill_empty_spaces_animation(game_board, screen):
         pygame.display.flip()
         pygame.time.delay(50)
 
-# 填充空格动画
-# def fill_empty_spaces_animation(game_board, screen):
-#     fall_info, new_blocks = game_board.fill_empty_spaces()
-#     num_steps = max([end_row - start_row for start_row, _, end_row, _ in fall_info], default=1)
-#     for step in range(num_steps + 1):
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 return False
-#         current_falling = []
-#         for start_row, col, end_row, _ in fall_info:
-#             current_row = start_row + step if start_row + step <= end_row else end_row
-#             current_falling.append((start_row, col, current_row, col))
-#         draw_board(game_board, screen, current_falling, new_blocks)
-#         pygame.display.flip()
-#         pygame.time.delay(50)
-#     return True
 
 
 if __name__ == "__main__":
@@ -251,6 +254,11 @@ if __name__ == "__main__":
     initial_steps = 10
     max_block_level = 5
     game_board = GameBoard(ROWS, COLS, type_probs, max_block_level, initial_steps)
+
+
+    # 显示初始棋盘。先放在这里
+    draw_board(game_board, screen)
+    pygame.display.flip()
 
     # 主循环
     running = True
@@ -266,6 +274,8 @@ if __name__ == "__main__":
                     row = (y - PADDING) // BLOCK_SIZE
                     if selected_block is None:
                         selected_block = (row, col)
+                        # draw_board(game_board, screen, selected_block=selected_block)
+                        # pygame.display.flip()
                     else:
                         x1, y1 = selected_block
                         x2, y2 = row, col
@@ -273,24 +283,39 @@ if __name__ == "__main__":
                             if not swap_animation(game_board, screen, x1, y1, x2, y2):
                                 running = False
                             matches = game_board.find_matches()
-                            if matches:
+                            if not matches:
+                                swap_animation(game_board, screen, x2, y2, x1, y1)
+                            # 处理连续消除
+                            # 加一个Flag处理连续消除中的swap_pos参数
+                            is_subsequent_eliminate = False
+
+                            while matches:
                                 if not elimination_animation(matches, game_board, screen):
                                     running = False
 
                                 # 得到需要生成新方块的位置，同时处理掉旧的位置的数据
-                                new_blocks = game_board.get_new_block_pos(matches,swap_pos=(x2,y2)) 
+                                if not is_subsequent_eliminate:
+                                    new_blocks = game_board.get_new_block_pos(matches,swap_pos=[(x1,y1),(x2,y2)])
+                                else:
+                                    new_blocks = game_board.get_new_block_pos(matches)
                         
                                 # 生成新方块动画
                                 generate_block_animation(matches,new_blocks,game_board,screen)
 
                                 # 填充，先不循环填充测试一下
                                 fill_empty_spaces_animation(game_board, screen)
+                                # For debug
+                                #time.sleep(60)
+                                matches = game_board.find_matches()
+                                is_subsequent_eliminate = True
 
-                            else: # 如果没有matchs，再交换回来
-                                swap_animation(game_board, screen, x2, y2, x1, y1)
+                            is_subsequent_eliminate = False    
+
                         selected_block = None
+                    
+                    # 处理鼠标选中
+                    draw_board(game_board, screen,selected_block=selected_block)
+                    pygame.display.flip()                        
 
-        draw_board(game_board, screen, selected_block)
-        pygame.display.flip()
 
     pygame.quit()

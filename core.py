@@ -179,6 +179,7 @@ class GameBoard:
                 self._dfs(neighbor, block_type, matches, visited, group)
 
     # 得到生成新方块的位置和type，和下面的remove_matches类似
+    # 需要注意swap_pos是两个，原位置和新位置都需要保留
     def get_new_block_pos(self, matches, swap_pos=None):
         res = []
         groups = self.group_matches(matches)
@@ -191,8 +192,10 @@ class GameBoard:
                 self.board[row][col] = None
 
             # 确定生成新方块的位置
-            if swap_pos and swap_pos in group:
-                x, y = swap_pos
+            if swap_pos and swap_pos[0] in group:
+                x, y = swap_pos[0]
+            elif swap_pos and swap_pos[1] in group:
+                x,y = swap_pos[1]
             else:
                 # 计算当前组的中心位置
                 sum_x = sum([row for row, _ in group])
@@ -239,7 +242,10 @@ class GameBoard:
 
     # For ui，需要增加一个获取fill_info的函数，获取fill动画所必须的信息：
     def fill_empty_spaces_ui(self):
+        #self.display_board()
+
         fall_info = []
+        new_blocks = []
         for col in range(self.cols):
             empty_spaces = []
             for row in range(self.rows - 1, -1, -1):
@@ -253,12 +259,15 @@ class GameBoard:
                         self.board[row][col] = None
                         empty_spaces.append(row)
             # 填充顶部的空缺
-            new_blocks = []
+            
             for empty_row in empty_spaces:
                 # 按照type_probs 填充
                 block_type = random.choices(range(1, len(self.type_probs) + 1), weights=self.type_probs)[0]
                 new_blocks.append((empty_row, col, block_type))
                 self.board[empty_row][col] = Block(block_type)
+
+        #self.display_board()
+
         return fall_info, new_blocks
 
     
