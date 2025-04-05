@@ -140,17 +140,19 @@ class GameBoard:
         # 检查水平匹配
         for row in range(self.rows):
             for col in range(self.cols - 2):
-                if (self.board[row][col].block_type == self.board[row][col + 1].block_type == self.board[row][col + 2].block_type) and (self.board[row][col].block_type < self.max_block_level):
-                    for i in range(3):
-                        if (row, col + i) not in matches:
-                            matches.append((row, col + i))
+                if self.board[row][col] and self.board[row][col + 1] and self.board[row][col + 2]:
+                    if (self.board[row][col].block_type == self.board[row][col + 1].block_type == self.board[row][col + 2].block_type) and (self.board[row][col].block_type < self.max_block_level):
+                        for i in range(3):
+                            if (row, col + i) not in matches:
+                                matches.append((row, col + i))
         # 检查垂直匹配
         for col in range(self.cols):
             for row in range(self.rows - 2):
-                if (self.board[row][col].block_type == self.board[row + 1][col].block_type == self.board[row + 2][col].block_type) and (self.board[row][col].block_type < self.max_block_level):
-                    for i in range(3):
-                        if (row + i, col) not in matches:
-                            matches.append((row + i, col))
+                if self.board[row][col] and self.board[row + 1][col] and self.board[row+2 ][col]:
+                    if (self.board[row][col].block_type == self.board[row + 1][col].block_type == self.board[row + 2][col].block_type) and (self.board[row][col].block_type < self.max_block_level):
+                        for i in range(3):
+                            if (row + i, col) not in matches:
+                                matches.append((row + i, col))
         return matches
 
     # 加入一个check_matches的函数：
@@ -181,9 +183,7 @@ class GameBoard:
 
     # 得到生成新方块的位置和type，和下面的remove_matches类似
     # 需要注意swap_pos是两个，原位置和新位置都需要保留
-    # 
-
-    def get_new_block_pos(self, matches, swap_pos=None):
+    def remove_matches_ui(self, matches, swap_pos=None):
         res = []
         groups = self.group_matches(matches)
         for group in groups:
