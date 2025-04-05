@@ -241,7 +241,12 @@ def fill_empty_spaces_animation(game_board, screen, falling_blocks, new_blocks):
         pygame.display.flip()
         pygame.time.delay(50)
 
-# 如果无法消除，加入shuffle的动画
+# 重新打乱棋盘的动画，原始棋盘全部渐出，新棋盘全部渐入：
+def reshuffle_animation(game_board, screen,all_pos, all_blocks):
+    elimination_animation(all_pos,game_board, screen)
+    generate_block_animation(all_pos, all_blocks, game_board,screen)
+    
+
 
 if __name__ == "__main__":
     # 创建游戏窗口
@@ -340,7 +345,7 @@ if __name__ == "__main__":
 
         # 检查棋盘是否stuck
         if game_board.is_board_stuck():
-            game_board.reshuffle_board()
-            
+            all_pos,all_blocks = game_board.reshuffle_board_ui()
+            reshuffle_animation(game_board, screen, all_pos, all_blocks)
 
     pygame.quit()

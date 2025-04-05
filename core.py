@@ -314,6 +314,29 @@ class GameBoard:
         print('The game board is stuck, reshuffle!')
         return True
 
+    # 额外返回all_blocks和all_pos列表用于新动画的生成
+    def reshuffle_board_ui(self):
+        all_blocks = [self.board[row][col] for row in range(self.rows) for col in range(self.cols)]
+        random.shuffle(all_blocks)
+        index = 0
+        while True:
+            for row in range(self.rows):
+                for col in range(self.cols):
+                    self.board[row][col] = all_blocks[index]
+                    index += 1
+            if not self.find_matches():
+                break
+            random.shuffle(all_blocks)
+            index = 0
+        print("棋盘已重新打散。")        
+        all_pos = []
+        all_blocks = []
+        for i in range(self.rows):
+            for j in range(self.cols):
+                all_pos.append((i,j))
+                all_blocks.append((i,j,self.board[i][j].block_type))
+        return all_pos, all_blocks
+
     # 暴力随机，可能重试次数很多，此时怎么办？
     def reshuffle_board(self):
         all_blocks = [self.board[row][col] for row in range(self.rows) for col in range(self.cols)]
