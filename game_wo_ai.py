@@ -14,7 +14,7 @@ WIDTH = COLS * BLOCK_SIZE
 HEIGHT = ROWS * BLOCK_SIZE
 PADDING = 5
 WINDOW_WIDTH = WIDTH + 2 * PADDING
-WINDOW_HEIGHT = HEIGHT + 2 * PADDING + 50  # 增加高度用于显示步数
+WINDOW_HEIGHT = HEIGHT + 2 * PADDING + 100  # 增加高度用于显示步数
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_GRAY = (200, 200, 200)
@@ -64,8 +64,11 @@ def draw_board(game_board, screen, selected_block=None, moving_blocks = None):
                 pygame.draw.rect(screen, SELECTED_COLOR, (x1, y1, BLOCK_SIZE, BLOCK_SIZE), 4)
 
     # 显示剩余步数
-    steps_text = font.render(f"剩余步数: {game_board.remaining_steps}", True, BLACK)
+    steps_text = font.render(f"Remaining steps: {game_board.remaining_steps}", True, BLACK)
     screen.blit(steps_text, (PADDING, HEIGHT + PADDING + 10))
+    # 显示已用步数
+    steps_text = font.render(f"Action steps: {game_board.total_steps}", True, BLACK)
+    screen.blit(steps_text, (PADDING, HEIGHT + PADDING + 50))
     pygame.display.flip()
 
 
@@ -247,6 +250,19 @@ def reshuffle_animation(game_board, screen,all_pos, all_blocks):
     generate_block_animation(all_pos, all_blocks, game_board,screen)
     
 
+# 显示游戏结束界面
+def show_game_over_screen(game_board, screen):
+    screen.fill(LIGHT_GRAY)
+    game_over_text = font.render("Game Over！", True, BLACK)
+    total_steps_text = font.render(f"Total Steps: {game_board.total_steps}", True, BLACK)
+    screen.blit(game_over_text, (WINDOW_WIDTH // 2 - game_over_text.get_width() // 2, WINDOW_HEIGHT // 2 - 50))
+    screen.blit(total_steps_text, (WINDOW_WIDTH // 2 - total_steps_text.get_width() // 2, WINDOW_HEIGHT // 2 + 20))
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+
 
 if __name__ == "__main__":
     # 创建游戏窗口
@@ -299,8 +315,17 @@ if __name__ == "__main__":
                             # 加一个Flag处理连续消除中的swap_pos参数
                             is_subsequent_eliminate = False
 
+                            # 成功交换则增加已用步数 + 1
+                            game_board.increase_total_steps()
+                            
+
+                            # 每次while循环整体结算一次步数,每次match统计
+                            max_len_list = []
+                            
                             while matches:
                                 elimination_animation(matches, game_board, screen)
+                                
+                                max_len_list.append(game_board.get_max_match_len(matches))
 
                                 # 得到需要生成新方块的位置，同时处理掉旧的位置的数据
                                 if not is_subsequent_eliminate:
@@ -319,6 +344,8 @@ if __name__ == "__main__":
                                 subsequent_matches = game_board.find_matches()
                                 # 掉落新方块之前就需要判断是否还有连续匹配：
                                 while subsequent_matches:
+                                    max_len_list.append(game_board.get_max_match_len(subsequent_matches))
+
                                     elimination_animation(subsequent_matches, game_board, screen) 
                                     new_blocks = game_board.remove_matches_ui(subsequent_matches)
                                     # 这个函数需要处理一下
@@ -334,7 +361,14 @@ if __name__ == "__main__":
                                 matches = game_board.find_matches()
                                 is_subsequent_eliminate = True
 
-                            is_subsequent_eliminate = False    
+                            is_subsequent_eliminate = False 
+                            # 根据   max_len_list 更新步数
+                            game_board.update_steps_ui(max_len_list)
+
+                            # 判断是否game_over
+                            if game_board.is_game_over():
+                                show_game_over_screen(game_board,screen)
+                                running = False
 
                         selected_block = None
 

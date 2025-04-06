@@ -38,7 +38,11 @@ class GameBoard:
                         break
    
         return board
-    
+
+    # 更新已用步数的接口
+    def increase_total_steps(self):
+        self.total_steps += 1
+
     # 判断是否游戏结束
     def is_game_over(self):
         if self.remaining_steps <= 0:
@@ -132,6 +136,22 @@ class GameBoard:
 
         print(f"剩余步数: {self.remaining_steps}, 已移动总步数: {self.total_steps}")
         
+    # ui用的计算最长匹配的函数
+    def get_max_match_len(self, matches):
+        grouped_matches = self.group_matches(matches)
+        max_matches = 0
+        for group in grouped_matches:
+            max_matches = max(max_matches, len(group))
+        return max_matches
+
+    def update_steps_ui(self, len_list):
+        max_len = max(len_list)
+        if max_len <= 3:
+            self.remaining_steps -= 1
+        else:
+            self.remaining_steps += sum(1 for num in len_list if num > 4)     
+        print(f"剩余步数: {self.remaining_steps}, 已移动总步数: {self.total_steps}")        
+
 
     # 最高等级的方块不会匹配
     # 需要兼容value是None的情况
@@ -157,6 +177,8 @@ class GameBoard:
 
     # 加入一个check_matches的函数：
     # 先用find_matches代替，效率差不多
+
+
 
 
     def group_matches(self, matches):
@@ -186,6 +208,8 @@ class GameBoard:
     def remove_matches_ui(self, matches, swap_pos=None):
         res = []
         groups = self.group_matches(matches)
+
+        #self.update_steps(groups)
         for group in groups:
             assert len(group) > 0
             original_type = self.board[group[0][0]][group[0][1]].block_type
