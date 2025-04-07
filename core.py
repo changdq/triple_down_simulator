@@ -394,7 +394,7 @@ class GameBoard:
                     max_match_length = max([len(group) for group in grouped_matches], default=0)
                     max_block_type = max([self.board[r][c].block_type for r, c in matches], default=0) if matches else 0
 
-                    if max_match_length > 4 and max_match_length > best_match_length:
+                    if max_match_length >= 4 and max_match_length > best_match_length:
                         best_move = (row, col, row, col + 1)
                         best_match_length = max_match_length
                         best_block_type = max_block_type
@@ -415,7 +415,7 @@ class GameBoard:
                     max_match_length = max([len(group) for group in grouped_matches], default=0)
                     max_block_type = max([self.board[r][c].block_type for r, c in matches], default=0) if matches else 0
 
-                    if max_match_length > 4 and max_match_length > best_match_length:
+                    if max_match_length >= 4 and max_match_length > best_match_length:
                         best_move = (row, col, row + 1, col)
                         best_match_length = max_match_length
                         best_block_type = max_block_type
