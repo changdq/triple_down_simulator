@@ -20,6 +20,8 @@ BLACK = (0, 0, 0)
 LIGHT_GRAY = (200, 200, 200)
 SELECTED_COLOR = (255, 128, 0)  # 选中方块的颜色
 
+GAME_SPEED = 3
+
 # 定义方块颜色，使用更柔和的色调
 COLORS = [(255, 102, 102), (102, 255, 102), (102, 102, 255), (255, 255, 102), (255, 178, 102)]
 
@@ -74,7 +76,7 @@ def draw_board(game_board, screen, selected_block=None, moving_blocks = None):
 
 # 交换两个相邻方块的动画效果
 def swap_animation(game_board, screen, x1, y1, x2, y2):
-    frames = 10
+    frames = 10 
     dx = (x2 - x1) * BLOCK_SIZE / frames
     dy = (y2 - y1) * BLOCK_SIZE / frames
     for j in range(frames):
@@ -104,14 +106,14 @@ def swap_animation(game_board, screen, x1, y1, x2, y2):
             text_rect = text.get_rect(center=(x + BLOCK_SIZE // 2, y + BLOCK_SIZE // 2))
             screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(20)
+        pygame.time.delay(int(20/GAME_SPEED))
 
     return True
 
 
 # 消除动画
 def elimination_animation(matches, game_board, screen):
-    shrink_factor = 1.0
+    shrink_factor = 1.0 
     while shrink_factor > 0:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -135,8 +137,8 @@ def elimination_animation(matches, game_board, screen):
                 text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
                 screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(50)
-        shrink_factor -= 0.1
+        pygame.time.delay(int(50/GAME_SPEED))
+        shrink_factor -= 0.1 
     return True
 
 # 在指定位置生成方块的动画
@@ -164,7 +166,7 @@ def generate_block_animation(matches, new_blocks, game_board, screen):
             text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
             screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(20)
+        pygame.time.delay(int(20/GAME_SPEED))
         grow_factor += 0.1
     #game_board.board[row][col] = GameBoard.Block(block_type)
     return True
@@ -174,7 +176,7 @@ def fill_empty_spaces_animation(game_board, screen, falling_blocks, new_blocks):
   
     # 把信息做成动画，应该是匀速下落，到了指定位置的方块就不再下落。
     # new_blocks可以假设初始位置是在棋盘外面的某个位置开始下落的。
-    speed = 5 # 下落速度, 5帧下降一个block的size
+    speed = 5  # 下落速度, 5帧下降一个block的size
     # 计算掉落需要的帧数
     max_gap = 0
     max_new_gap = 0
@@ -242,7 +244,7 @@ def fill_empty_spaces_animation(game_board, screen, falling_blocks, new_blocks):
                 screen.blit(text, text_rect)
 
         pygame.display.flip()
-        pygame.time.delay(50)
+        pygame.time.delay(int(50/GAME_SPEED))
 
 # 重新打乱棋盘的动画，原始棋盘全部渐出，新棋盘全部渐入：
 def reshuffle_animation(game_board, screen,all_pos, all_blocks):
@@ -273,6 +275,7 @@ if __name__ == "__main__":
     type_probs = [0.2, 0.2, 0.2, 0.2, 0]
     initial_steps = 10
     max_block_level = 5
+
     game_board = GameBoard(ROWS, COLS, type_probs, max_block_level, initial_steps)
 
 

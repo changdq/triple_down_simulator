@@ -2,6 +2,7 @@ import pygame
 import random
 from core import GameBoard
 import time 
+import ai
 
 # 初始化 Pygame
 pygame.init()
@@ -22,6 +23,8 @@ SELECTED_COLOR = (255, 128, 0)  # 选中方块的颜色
 
 # 定义方块颜色，使用更柔和的色调
 COLORS = [(255, 102, 102), (102, 255, 102), (102, 102, 255), (255, 255, 102), (255, 178, 102)]
+
+GAME_SPEED = 3
 
 # 加载支持中文的字体，这里以系统自带的宋体为例，不同系统字体路径可能不同
 try:
@@ -104,7 +107,7 @@ def swap_animation(game_board, screen, x1, y1, x2, y2):
             text_rect = text.get_rect(center=(x + BLOCK_SIZE // 2, y + BLOCK_SIZE // 2))
             screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(20)
+        pygame.time.delay(int(20/GAME_SPEED))
 
     return True
 
@@ -135,7 +138,7 @@ def elimination_animation(matches, game_board, screen):
                 text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
                 screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(50)
+        pygame.time.delay(int(50/GAME_SPEED))
         shrink_factor -= 0.1
     return True
 
@@ -164,7 +167,7 @@ def generate_block_animation(matches, new_blocks, game_board, screen):
             text_rect = text.get_rect(center=(x1 + BLOCK_SIZE // 2, y1 + BLOCK_SIZE // 2))
             screen.blit(text, text_rect)
         pygame.display.flip()
-        pygame.time.delay(20)
+        pygame.time.delay(int(20/GAME_SPEED))
         grow_factor += 0.1
     #game_board.board[row][col] = GameBoard.Block(block_type)
     return True
@@ -242,7 +245,7 @@ def fill_empty_spaces_animation(game_board, screen, falling_blocks, new_blocks):
                 screen.blit(text, text_rect)
 
         pygame.display.flip()
-        pygame.time.delay(50)
+        pygame.time.delay(int(50/GAME_SPEED))
 
 # 重新打乱棋盘的动画，原始棋盘全部渐出，新棋盘全部渐入：
 def reshuffle_animation(game_board, screen,all_pos, all_blocks):
@@ -280,6 +283,8 @@ if __name__ == "__main__":
     pygame.display.flip()
 
     move_type = input("请选择移动方式 (1: 玩家输入, 2: AI 移动): ")
+
+    ai_player = ai.GreedyAI()
 
     # 主循环
     running = True
@@ -373,7 +378,8 @@ if __name__ == "__main__":
                         selected_block = None
 
         elif move_type == '2':
-            best_move = game_board.ai_move()
+            #best_move = game_board.ai_move()
+            best_move = ai_player.get_move(game_board)
             if best_move:
                 x1, y1, x2, y2 = best_move
                 if (abs(x1 - x2) + abs(y1 - y2)) == 1:
