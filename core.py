@@ -98,8 +98,12 @@ class GameBoard:
                 self.total_steps += 1 
 
                 grouped_matches = self.group_matches(matches)
+
                 self.update_steps(grouped_matches)
                 self.remove_matches(grouped_matches, (x2, y2))
+
+                # TODO：此处应该增加不下落情况下的连续消除情况
+
                 self.fill_empty_spaces()
                 # Debug:
                 # self.display_board()
